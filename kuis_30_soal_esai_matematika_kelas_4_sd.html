@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis 30 Soal Esai Matematika Kelas 4 SD</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Tone.js untuk Efek Audio Interaktif tanpa URL eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F0F9FF;
+            background-image: radial-gradient(#BAE6FD 2px, transparent 2px);
+            background-size: 28px 28px;
+        }
+        .card-3d {
+            box-shadow: 0 8px 0px rgba(15, 23, 42, 0.08);
+        }
+        .btn-push {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-push:active {
+            transform: translateY(3px);
+        }
+        /* Animasi getar saat jawaban salah */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.45s ease-in-out;
+        }
+        /* Animasi pop saat jawaban benar */
+        @keyframes popScale {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: popScale 0.35s ease-out;
+        }
+        /* Custom scrollbar untuk grid navigasi */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E0F2FE;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #7DD3FC;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-500 text-white py-5 px-4 shadow-md rounded-b-3xl">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-center sm:text-left">
+                <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs sm:text-sm font-bold mb-1">
+                    <i class="fa-solid fa-shield-halved text-amber-300"></i>
+                    <span>Auto-Save Aktif (Aman saat Offline / Reload)</span>
+                </div>
+                <h1 class="font-display text-2xl sm:text-3xl font-bold tracking-wide">
+                    Tantangan 30 Soal Esai Matematika 🚀
+                </h1>
+                <p class="text-sky-100 text-sm sm:text-base font-semibold">
+                    Penjumlahan & Pengurangan Bilangan Cacah (Kelas 4 SD)
+                </p>
+            </div>
+
+            <!-- Kontrol Suara & Skor Ringkas -->
+            <div class="flex items-center gap-3">
+                <button id="btn-sound" onclick="toggleSound()" class="btn-push bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 border border-white/30 cursor-pointer" title="Aktifkan/Matikan Suara">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-amber-300"></i>
+                    <span id="sound-text">Suara: ON</span>
+                </button>
+                <div class="bg-amber-400 text-amber-950 px-4 py-2.5 rounded-2xl font-display font-bold text-sm sm:text-base shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>Benar: <span id="header-correct-count">0</span>/30</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="max-w-6xl mx-auto w-full px-4 py-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- KOLOM KIRI: AREA SOAL ESAI (8 Kolom di Layar Besar) -->
+        <div class="lg:col-span-8 space-y-4">
+            
+            <!-- Kartu Soal Utama -->
+            <div id="question-card" class="bg-white rounded-3xl p-6 sm:p-8 card-3d border-2 border-sky-100 transition-all">
+                
+                <!-- Baris Info Nomor & Status -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b-2 border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span id="q-number-badge" class="bg-indigo-600 text-white font-display font-bold px-4 py-1.5 rounded-2xl text-base sm:text-lg shadow-sm">
+                            Soal No. 1
+                        </span>
+                    </div>
+                    <span id="q-status-badge" class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-500">
+                        Belum Dijawab
+                    </span>
+                </div>
+
+                <!-- Teks Pertanyaan Cerita -->
+                <div class="my-6 bg-slate-50 p-5 sm:p-6 rounded-2xl border-2 border-slate-200/80">
+                    <p id="q-text" class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed">
+                        Memuat pertanyaan...
+                    </p>
+                </div>
+
+                <!-- Form Input Jawaban Esai -->
+                <form id="answer-form" onsubmit="handleAnswerSubmit(event)" class="space-y-4">
+                    <div>
+                        <label for="essay-input" class="block text-sm font-bold text-slate-600 mb-2">
+                            <i class="fa-solid fa-pen-to-square text-indigo-500 mr-1"></i> Ketik Jawaban Kamu di Sini:
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative flex-grow">
+                                <input 
+                                    type="text" 
+                                    id="essay-input" 
+                                    inputmode="numeric"
+                                    autocomplete="off"
+                                    placeholder="Ketik jawaban..."
+                                    class="w-full text-xl sm:text-2xl font-display font-bold px-5 py-3.5 rounded-2xl border-2 border-indigo-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-slate-800 bg-white"
+                                >
+                                <span id="q-unit" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm sm:text-base pointer-events-none">
+                                    satuan
+                                </span>
+                            </div>
+                            <button 
+                                type="submit" 
+                                id="btn-submit-answer"
+                                class="btn-push bg-emerald-500 hover:bg-emerald-600 text-white font-display font-bold px-7 py-3.5 rounded-2xl text-lg shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                            >
+                                <i class="fa-solid fa-check-circle"></i>
+                                <span>Cek Jawaban</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Kotak Feedback Langsung (Muncul setelah dijawab) -->
+                <div id="feedback-box" class="hidden mt-6 p-5 rounded-2xl border-2 transition-all">
+                    <div class="flex items-start gap-3">
+                        <div id="feedback-icon" class="text-3xl shrink-0 mt-0.5">🎉</div>
+                        <div class="space-y-1">
+                            <h3 id="feedback-title" class="font-display text-lg sm:text-xl font-bold">Judul Feedback</h3>
+                            <p id="feedback-detail" class="text-sm sm:text-base font-semibold leading-relaxed">Penjelasan langkah...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol Navigasi Sebelumnya & Selanjutnya -->
+                <div class="mt-8 pt-4 border-t-2 border-slate-100 flex items-center justify-between gap-3">
+                    <button 
+                        type="button" 
+                        id="btn-prev" 
+                        onclick="goToQuestion(currentIndex - 1)"
+                        class="btn-push bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold px-5 py-3 rounded-2xl text-sm sm:text-base flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Sebelumnya</span>
+                    </button>
+
+                    <button 
+                        type="button" 
+                        id="btn-next" 
+                        onclick="goToQuestion(currentIndex + 1)"
+                        class="btn-push bg-indigo-600 hover:bg-indigo-700 text-white font-display font-bold px-6 py-3 rounded-2xl text-sm sm:text-base flex items-center gap-2 shadow-sm cursor-pointer"
+                    >
+                        <span>Selanjutnya</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner Selesai Semua (Muncul jika 30 soal sudah terjawab semua) -->
+            <div id="all-completed-banner" class="hidden bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 rounded-3xl p-6 card-3d flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                    <div class="text-5xl">🏆</div>
+                    <div>
+                        <h3 class="font-display text-xl sm:text-2xl font-bold">Hebat! Semua 30 Soal Sudah Dijawab!</h3>
+                        <p id="final-summary-text" class="font-bold text-sm sm:text-base">Skor akhir kamu adalah...</p>
+                    </div>
+                </div>
+                <button onclick="openResetModal()" class="btn-push bg-white text-orange-600 font-display font-bold px-5 py-3 rounded-2xl shadow-sm shrink-0 cursor-pointer">
+                    Ulangi Kuis
+                </button>
+            </div>
+
+        </div>
+
+        <!-- KOLOM KANAN: PANEL NAVIGASI 30 NOMOR & PROGRES (4 Kolom di Layar Besar) -->
+        <aside class="lg:col-span-4 space-y-4">
+            <div class="bg-white rounded-3xl p-5 sm:p-6 card-3d border-2 border-sky-100">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-display text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-grip text-indigo-500"></i>
+                        <span>Navigasi Soal (1–30)</span>
+                    </h2>
+                    <span id="progress-text" class="text-xs font-extrabold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg">
+                        0/30 Selesai
+                    </span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-4 border border-slate-200">
+                    <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Legenda Warna -->
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-slate-500 mb-4 bg-slate-50 p-2.5 rounded-xl">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Benar</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> Salah</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-200 border border-slate-300 inline-block"></span> Belum</span>
+                </div>
+
+                <!-- Grid Tombol Nomor 1 - 30 -->
+                <div id="nav-grid" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 max-h-[340px] overflow-y-auto p-1">
+                    <!-- Diisi lewat JavaScript -->
+                </div>
+
+                <!-- Tombol Reset Jawaban -->
+                <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-xs text-slate-400 font-semibold">
+                        <i class="fa-solid fa-floppy-disk text-emerald-500 mr-1"></i> Tersimpan otomatis
+                    </span>
+                    <button onclick="openResetModal()" class="text-xs font-bold text-rose-500 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> Reset Semua
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Modal Konfirmasi Reset (Pengganti confirm() bawaan browser) -->
+    <div id="reset-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 card-3d border-2 border-slate-100 text-center space-y-4 animate-pop">
+            <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center text-3xl mx-auto">
+                <i class="fa-solid fa-rotate-left"></i>
+            </div>
+            <h3 class="font-display text-2xl font-bold text-slate-800">Ulangi Kuis dari Awal?</h3>
+            <p class="text-slate-600 text-sm sm:text-base font-semibold">
+                Semua jawaban dan skor kamu saat ini akan dihapus sehingga kamu bisa berlatih lagi dari soal nomor 1.
+            </p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeResetModal()" class="flex-1 btn-push bg-slate-100 hover:bg-slate-200 text-slate-700 font-display font-bold py-3 rounded-2xl cursor-pointer">
+                    Batal
+                </button>
+                <button onclick="confirmResetQuiz()" class="flex-1 btn-push bg-rose-500 hover:bg-rose-600 text-white font-display font-bold py-3 rounded-2xl shadow-md cursor-pointer">
+                    Ya, Hapus & Ulangi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. DATABASE 30 SOAL ESAI MATEMATIKA KELAS 4 SD (TANPA CLUE & PINJAM BERUNTUN)
+        // =========================================================================
+        const questionsData = [
+            {
+                id: 1,
+                category: "Penjumlahan",
+                text: "Sebuah toko roti membuat 2.340 roti cokelat pada pagi hari dan 1.850 roti keju pada sore hari. Berapa jumlah seluruh roti yang dibuat toko tersebut hari ini?",
+                answer: 4190,
+                unit: "roti",
+                explanation: "2.340 + 1.850 = 4.190 roti."
+            },
+            {
+                id: 2,
+                category: "Pengurangan",
+                text: "Di gudang beras Pak Jaya tersedia 6.000 kg beras. Hari ini beras tersebut dikirim ke pasar sebanyak 2.475 kg. Berapa kg sisa beras di gudang Pak Jaya?",
+                answer: 3525,
+                unit: "kg",
+                explanation: "Pengurangan nol beruntun: 6.000 − 2.475 = 3.525 kg."
+            },
+            {
+                id: 3,
+                category: "Penjumlahan",
+                text: "Pada acara jalan sehat, peserta dewasa berjumlah 3.425 orang, sedangkan peserta anak-anak berjumlah 2.690 orang. Berapa total seluruh peserta jalan sehat tersebut?",
+                answer: 6115,
+                unit: "orang",
+                explanation: "3.425 + 2.690 = 6.115 orang."
+            },
+            {
+                id: 4,
+                category: "Pengurangan",
+                text: "Panjang jembatan Merah adalah 5.002 meter, sedangkan panjang jembatan Biru adalah 2.685 meter. Berapa meter selisih panjang kedua jembatan tersebut?",
+                answer: 2317,
+                unit: "meter",
+                explanation: "Pengurangan pinjam beruntun pada angka nol: 5.002 − 2.685 = 2.317 meter."
+            },
+            {
+                id: 5,
+                category: "Penjumlahan",
+                text: "Rina menabung uang di celengan sebesar Rp4.750. Keesokan harinya, ayah memberi Rina uang Rp3.500 dan ia masukkan ke celengan. Berapa jumlah uang Rina di celengan sekarang?",
+                answer: 8250,
+                unit: "rupiah",
+                explanation: "4.750 + 3.500 = 8.250."
+            },
+            {
+                id: 6,
+                category: "Pengurangan",
+                text: "Seorang peternak ikan lele memanen 7.000 ekor ikan. Sebanyak 4.368 ekor dibeli oleh pedagang rumah makan. Berapa ekor ikan lele yang belum terjual?",
+                answer: 2632,
+                unit: "ekor",
+                explanation: "Pengurangan nol beruntun: 7.000 − 4.368 = 2.632 ekor."
+            },
+            {
+                id: 7,
+                category: "Penjumlahan",
+                text: "Pabrik mainan menghasilkan 4.180 mobil-mobilan pada bulan Januari dan 4.920 mobil-mobilan pada bulan Februari. Berapa banyak mobil-mobilan yang dihasilkan selama dua bulan tersebut?",
+                answer: 9100,
+                unit: "buah",
+                explanation: "4.180 + 4.920 = 9.100 buah."
+            },
+            {
+                id: 8,
+                category: "Pengurangan",
+                text: "Uang saku Beni minggu ini adalah Rp9.005. Ia membeli buku gambar seharga Rp5.478. Berapa sisa uang saku Beni sekarang?",
+                answer: 3527,
+                unit: "rupiah",
+                explanation: "Pengurangan pinjam beruntun melewati angka nol: 9.005 − 5.478 = 3.527."
+            },
+            {
+                id: 9,
+                category: "Penjumlahan",
+                text: "Sebuah kapal feri mengangkut 1.675 penumpang di dek bawah dan 1.485 penumpang di dek atas. Berapa jumlah seluruh penumpang di kapal feri itu?",
+                answer: 3160,
+                unit: "orang",
+                explanation: "1.675 + 1.485 = 3.160 orang."
+            },
+            {
+                id: 10,
+                category: "Pengurangan",
+                text: "Kebun teh Indah memiliki 8.000 pohon teh. Karena terkena hama, sebanyak 1.345 pohon mati. Berapa pohon teh yang masih hidup?",
+                answer: 6655,
+                unit: "pohon",
+                explanation: "Pengurangan nol beruntun: 8.000 − 1.345 = 6.655 pohon."
+            },
+            {
+                id: 11,
+                category: "Penjumlahan",
+                text: "Pada hari Minggu, museum sejarah dikunjungi 3.890 pelajar dan 2.410 wisatawan umum. Berapa jumlah pengunjung museum seluruhnya?",
+                answer: 6300,
+                unit: "orang",
+                explanation: "3.890 + 2.410 = 6.300 orang."
+            },
+            {
+                id: 12,
+                category: "Pengurangan",
+                text: "Jarak rumah Dito ke sekolah adalah 4.000 meter. Dito sudah berjalan kaki sejauh 1.856 meter. Berapa meter lagi jarak yang harus ditempuh Dito untuk sampai ke sekolah?",
+                answer: 2144,
+                unit: "meter",
+                explanation: "Pengurangan nol beruntun: 4.000 − 1.856 = 2.144 meter."
+            },
+            {
+                id: 13,
+                category: "Penjumlahan",
+                text: "Koperasi sekolah memiliki stok 2.750 pensil. Pengurus koperasi membeli lagi 3.650 pensil dari distributor. Berapa banyak pensil di koperasi sekarang?",
+                answer: 6400,
+                unit: "pensil",
+                explanation: "2.750 + 3.650 = 6.400 pensil."
+            },
+            {
+                id: 14,
+                category: "Pengurangan",
+                text: "Berat muatan truk A adalah 6.103 kg, sedangkan berat muatan truk B adalah 4.895 kg. Berapa kg selisih berat muatan kedua truk tersebut?",
+                answer: 1208,
+                unit: "kg",
+                explanation: "Pengurangan pinjam beruntun: 6.103 − 4.895 = 1.208 kg."
+            },
+            {
+                id: 15,
+                category: "Penjumlahan",
+                text: "Dalam lomba lari maraton, panitia menyediakan 5.450 botol air mineral di pos pertama dan 4.250 botol di pos kedua. Berapa total botol air mineral yang disediakan?",
+                answer: 9700,
+                unit: "botol",
+                explanation: "5.450 + 4.250 = 9.700 botol."
+            },
+            {
+                id: 16,
+                category: "Pengurangan",
+                text: "Ibu membuat 5.000 kue kering untuk acara hajatan. Sebanyak 3.124 kue telah disajikan kepada tamu. Berapa sisa kue kering yang masih ada di dapur?",
+                answer: 1876,
+                unit: "kue",
+                explanation: "Pengurangan nol beruntun: 5.000 − 3.124 = 1.876 kue."
+            },
+            {
+                id: 17,
+                category: "Penjumlahan",
+                text: "Desa Sukamaju menanam 3.125 bibit pohon mahoni dan 2.975 bibit pohon jati di lereng bukit. Berapa jumlah semua bibit pohon yang ditanam?",
+                answer: 6100,
+                unit: "bibit",
+                explanation: "3.125 + 2.975 = 6.100 bibit."
+            },
+            {
+                id: 18,
+                category: "Pengurangan",
+                text: "Sebuah gedung bioskop memiliki kapasitas 7.004 kursi. Jika saat ini sudah terisi 4.689 penonton, berapa kursi yang masih kosong?",
+                answer: 2315,
+                unit: "kursi",
+                explanation: "Pengurangan pinjam beruntun melewati angka nol: 7.004 − 4.689 = 2.315 kursi."
+            },
+            {
+                id: 19,
+                category: "Penjumlahan",
+                text: "Pak Hasan memanen 4.380 kg jagung dari ladang utara dan 3.740 kg jagung dari ladang selatan. Berapa kg total hasil panen jagung Pak Hasan?",
+                answer: 8120,
+                unit: "kg",
+                explanation: "4.380 + 3.740 = 8.120 kg."
+            },
+            {
+                id: 20,
+                category: "Pengurangan",
+                text: "Harga sebuah penghapus karakter adalah Rp3.265, sedangkan harga sebuah penggaris adalah Rp5.000. Berapa rupiah selisih harga kedua alat tulis tersebut?",
+                answer: 1735,
+                unit: "rupiah",
+                explanation: "Pengurangan nol beruntun: 5.000 − 3.265 = 1.735."
+            },
+            {
+                id: 21,
+                category: "Penjumlahan",
+                text: "Kereta api Argo Bromo membawa 1.895 penumpang dari Jakarta. Di stasiun Cirebon, naik lagi 1.245 penumpang. Berapa jumlah penumpang kereta api tersebut sekarang?",
+                answer: 3140,
+                unit: "orang",
+                explanation: "1.895 + 1.245 = 3.140 orang."
+            },
+            {
+                id: 22,
+                category: "Pengurangan",
+                text: "Toko bangunan memiliki persediaan 9.000 batu bata. Pak Ridwan membeli 5.457 batu bata untuk membangun pagar rumah. Berapa sisa batu bata di toko itu?",
+                answer: 3543,
+                unit: "buah",
+                explanation: "Pengurangan nol beruntun: 9.000 − 5.457 = 3.543 buah."
+            },
+            {
+                id: 23,
+                category: "Penjumlahan",
+                text: "Pada festival layang-layang, terkumpul 2.640 layang-layang hias dan 3.580 layang-layang aduan. Berapa jumlah seluruh layang-layang di festival itu?",
+                answer: 6220,
+                unit: "buah",
+                explanation: "2.640 + 3.580 = 6.220 buah."
+            },
+            {
+                id: 24,
+                category: "Pengurangan",
+                text: "Tangki air di sekolah berisi 6.000 liter air. Setelah digunakan untuk menyiram taman dan mencuci tangan, air tersisa 2.378 liter. Berapa liter air yang telah digunakan?",
+                answer: 3622,
+                unit: "liter",
+                explanation: "Pengurangan nol beruntun: 6.000 − 2.378 = 3.622 liter."
+            },
+            {
+                id: 25,
+                category: "Penjumlahan",
+                text: "Sebuah konveksi menjahit 4.560 seragam pramuka dan 3.890 seragam olahraga. Berapa total seragam yang dijahit konveksi tersebut?",
+                answer: 8450,
+                unit: "seragam",
+                explanation: "4.560 + 3.890 = 8.450 seragam."
+            },
+            {
+                id: 26,
+                category: "Pengurangan",
+                text: "Jumlah penduduk Kelurahan Melati adalah 8.003 jiwa, sedangkan Kelurahan Mawar adalah 6.798 jiwa. Berapa jiwa selisih penduduk kedua kelurahan tersebut?",
+                answer: 1205,
+                unit: "jiwa",
+                explanation: "Pengurangan pinjam beruntun melewati angka nol: 8.003 − 6.798 = 1.205 jiwa."
+            },
+            {
+                id: 27,
+                category: "Penjumlahan",
+                text: "Nenek memetik 1.950 bunga melati di pagi hari. Sore harinya nenek memetik lagi 2.175 bunga melati. Berapa jumlah seluruh bunga melati yang dipetik nenek?",
+                answer: 4125,
+                unit: "bunga",
+                explanation: "1.950 + 2.175 = 4.125 bunga."
+            },
+            {
+                id: 28,
+                category: "Pengurangan",
+                text: "Pabrik kerupuk memproduksi 8.000 bungkus kerupuk. Sebanyak 4.872 bungkus sudah dikirim ke warung-warung. Berapa bungkus kerupuk yang masih ada di pabrik?",
+                answer: 3128,
+                unit: "bungkus",
+                explanation: "Pengurangan nol beruntun: 8.000 − 4.872 = 3.128 bungkus."
+            },
+            {
+                id: 29,
+                category: "Penjumlahan",
+                text: "Dalam pertandingan sepak bola, penonton di tribun timur berjumlah 4.875 orang dan di tribun barat berjumlah 4.625 orang. Berapa jumlah penonton di kedua tribun itu?",
+                answer: 9500,
+                unit: "orang",
+                explanation: "4.875 + 4.625 = 9.500 orang."
+            },
+            {
+                id: 30,
+                category: "Pengurangan",
+                text: "Kakek memiliki 7.010 ekor bebek di kandang. Sebanyak 2.586 ekor bebek dijual ke pasar hewan. Berapa sisa bebek kakek sekarang?",
+                answer: 4424,
+                unit: "ekor",
+                explanation: "Pengurangan pinjam beruntun: 7.010 − 2.586 = 4.424 ekor."
+            }
+        ];
+
+        // =========================================================================
+        // 2. MANAJEMEN STATE & PENYIMPANAN OTOMATIS (LOCALSTORAGE)
+        // =========================================================================
+        const STORAGE_KEY = 'kuis_mtk_kls4_30_esai_v2';
+        
+        let currentIndex = 0;
+        let soundEnabled = true;
+        // Struktur userAnswers: { [questionId]: { userValue: number, isCorrect: boolean } }
+        let userAnswers = {};
+
+        function loadStateFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    userAnswers = parsed.userAnswers || {};
+                    if (typeof parsed.currentIndex === 'number' && parsed.currentIndex >= 0 && parsed.currentIndex < questionsData.length) {
+                        currentIndex = parsed.currentIndex;
+                    }
+                    if (typeof parsed.soundEnabled === 'boolean') {
+                        soundEnabled = parsed.soundEnabled;
+                    }
+                }
+            } catch (e) {
+                console.warn("Gagal membaca localStorage:", e);
+            }
+        }
+
+        function saveStateToStorage() {
+            try {
+                const dataToSave = {
+                    userAnswers,
+                    currentIndex,
+                    soundEnabled,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            } catch (e) {
+                console.warn("Gagal menyimpan ke localStorage:", e);
+            }
+        }
+
+        // =========================================================================
+        // 3. EFEK AUDIO INTERAKTIF (MENGGUNAKAN TONE.JS TANPA FILE EKSTERNAL)
+        // =========================================================================
+        let synth = null;
+
+        async function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                await Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+            }
+        }
+
+        async function playSoundEffect(type) {
+            if (!soundEnabled) return;
+            try {
+                await initAudio();
+                if (!synth) return;
+
+                const now = Tone.now();
+                if (type === 'correct') {
+                    // Nada ceria naik (C5 - E5 - G5 - C6)
+                    synth.triggerAttackRelease("C5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.09);
+                    synth.triggerAttackRelease("G5", "16n", now + 0.18);
+                    synth.triggerAttackRelease("C6", "8n", now + 0.27);
+                } else if (type === 'wrong') {
+                    // Nada rendah lembut (E4 -> C4)
+                    synth.triggerAttackRelease("E4", "8n", now);
+                    synth.triggerAttackRelease("C4", "4n", now + 0.15);
+                }
+            } catch (e) {
+                // Abaikan jika browser memblokir autoplay audio sebelum interaksi
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            updateSoundUI();
+            saveStateToStorage();
+        }
+
+        function updateSoundUI() {
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            if (soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-amber-300";
+                text.textContent = "Suara: ON";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-slate-300";
+                text.textContent = "Suara: OFF";
+            }
+        }
+
+        // =========================================================================
+        // 4. RENDER UI SOAL & NAVIGASI
+        // =========================================================================
+        function renderQuestion() {
+            const q = questionsData[currentIndex];
+            const savedRecord = userAnswers[q.id];
+            const cardEl = document.getElementById('question-card');
+
+            // Reset kelas animasi
+            cardEl.classList.remove('animate-pop', 'animate-shake', 'border-emerald-400', 'border-rose-400');
+            cardEl.classList.add('border-sky-100');
+
+            // Update Header Soal (Tanpa menampilkan label kategori agar tidak menjadi clue)
+            document.getElementById('q-number-badge').textContent = `Soal No. ${q.id}`;
+
+            document.getElementById('q-text').textContent = q.text;
+            document.getElementById('q-unit').textContent = q.unit;
+
+            const inputEl = document.getElementById('essay-input');
+            const submitBtn = document.getElementById('btn-submit-answer');
+            const statusBadge = document.getElementById('q-status-badge');
+            const feedbackBox = document.getElementById('feedback-box');
+
+            if (savedRecord) {
+                // Soal sudah pernah dijawab
+                inputEl.value = savedRecord.userValue.toLocaleString('id-ID');
+                inputEl.disabled = true;
+                inputEl.classList.add('bg-slate-100', 'text-slate-600');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                showFeedbackUI(savedRecord.isCorrect, savedRecord.userValue, q, false);
+
+                if (savedRecord.isCorrect) {
+                    statusBadge.textContent = "✓ Terjawab Benar";
+                    statusBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700";
+                    cardEl.classList.replace('border-sky-100', 'border-emerald-400');
+                } else {
+                    statusBadge.textContent = "✕ Terjawab Salah";
+                    statusBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-700";
+                    cardEl.classList.replace('border-sky-100', 'border-rose-400');
+                }
+            } else {
+                // Soal belum dijawab
+                inputEl.value = "";
+                inputEl.disabled = false;
+                inputEl.classList.remove('bg-slate-100', 'text-slate-600');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                statusBadge.textContent = "Belum Dijawab";
+                statusBadge.className = "text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-500";
+                feedbackBox.classList.add('hidden');
+                
+                // Fokus otomatis pada input di layar desktop
+                if (window.innerWidth > 768) {
+                    inputEl.focus();
+                }
+            }
+
+            // Update tombol Prev & Next
+            document.getElementById('btn-prev').disabled = (currentIndex === 0);
+            const nextBtn = document.getElementById('btn-next');
+            if (currentIndex === questionsData.length - 1) {
+                nextBtn.innerHTML = `<span>Ke Soal No. 1</span> <i class="fa-solid fa-rotate-left"></i>`;
+            } else {
+                nextBtn.innerHTML = `<span>Selanjutnya</span> <i class="fa-solid fa-arrow-right"></i>`;
+            }
+
+            renderNavGrid();
+            updateProgressStats();
+        }
+
+        function handleAnswerSubmit(event) {
+            event.preventDefault();
+            const q = questionsData[currentIndex];
+            if (userAnswers[q.id]) return; // Cegah submit ganda
+
+            const inputEl = document.getElementById('essay-input');
+            // Bersihkan titik, koma, atau spasi agar format 4.500 maupun 4500 terbaca sebagai angka 4500
+            const rawCleaned = inputEl.value.replace(/[\.\,\s]/g, '');
+
+            if (rawCleaned === '' || isNaN(Number(rawCleaned))) {
+                inputEl.classList.add('border-rose-500', 'animate-shake');
+                setTimeout(() => inputEl.classList.remove('border-rose-500', 'animate-shake'), 500);
+                inputEl.focus();
+                return;
+            }
+
+            const numericAnswer = parseInt(rawCleaned, 10);
+            const isCorrect = (numericAnswer === q.answer);
+
+            // Simpan hasil ke state & localStorage
+            userAnswers[q.id] = {
+                userValue: numericAnswer,
+                isCorrect: isCorrect
+            };
+            saveStateToStorage();
+
+            // Mainkan efek suara & visual
+            playSoundEffect(isCorrect ? 'correct' : 'wrong');
+            if (isCorrect && typeof confetti === 'function') {
+                confetti({
+                    particleCount: 55,
+                    spread: 65,
+                    origin: { y: 0.7 }
+                });
+            }
+
+            // Render ulang tampilan soal saat ini dengan animasi
+            renderQuestion();
+            const cardEl = document.getElementById('question-card');
+            cardEl.classList.add(isCorrect ? 'animate-pop' : 'animate-shake');
+        }
+
+        function showFeedbackUI(isCorrect, userValue, q) {
+            const box = document.getElementById('feedback-box');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const detail = document.getElementById('feedback-detail');
+
+            box.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-300', 'text-emerald-900', 'bg-rose-50', 'border-rose-300', 'text-rose-900');
+
+            if (isCorrect) {
+                box.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-900');
+                icon.textContent = "🎉";
+                title.textContent = "Luar Biasa! Jawaban Kamu Benar!";
+                detail.innerHTML = `Jawaban kamu: <strong>${userValue.toLocaleString('id-ID')} ${q.unit}</strong>.<br>${q.explanation}`;
+            } else {
+                box.classList.add('bg-rose-50', 'border-rose-300', 'text-rose-900');
+                icon.textContent = "💡";
+                title.textContent = "Yah, Jawaban Kamu Kurang Tepat!";
+                detail.innerHTML = `Jawaban kamu: <strong>${userValue.toLocaleString('id-ID')}</strong>, sedangkan jawaban yang benar adalah <strong>${q.answer.toLocaleString('id-ID')} ${q.unit}</strong>.<br>${q.explanation}`;
+            }
+        }
+
+        function goToQuestion(index) {
+            if (index >= questionsData.length) {
+                currentIndex = 0;
+            } else if (index < 0) {
+                currentIndex = 0;
+            } else {
+                currentIndex = index;
+            }
+            saveStateToStorage();
+            renderQuestion();
+        }
+
+        function renderNavGrid() {
+            const grid = document.getElementById('nav-grid');
+            grid.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const record = userAnswers[q.id];
+                const isActive = (idx === currentIndex);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = q.id;
+                btn.onclick = () => goToQuestion(idx);
+
+                let baseClasses = "h-10 rounded-xl font-display font-bold text-sm flex items-center justify-center transition-all cursor-pointer ";
+
+                if (record) {
+                    if (record.isCorrect) {
+                        baseClasses += "bg-emerald-500 text-white shadow-xs ";
+                    } else {
+                        baseClasses += "bg-rose-500 text-white shadow-xs ";
+                    }
+                } else {
+                    baseClasses += "bg-slate-100 hover:bg-sky-100 text-slate-700 border border-slate-200 ";
+                }
+
+                if (isActive) {
+                    baseClasses += "ring-4 ring-indigo-400 scale-105 z-10 ";
+                }
+
+                btn.className = baseClasses;
+                grid.appendChild(btn);
+            });
+        }
+
+        function updateProgressStats() {
+            const totalQuestions = questionsData.length;
+            const answeredIds = Object.keys(userAnswers);
+            const answeredCount = answeredIds.length;
+            let correctCount = 0;
+
+            answeredIds.forEach(id => {
+                if (userAnswers[id].isCorrect) correctCount++;
+            });
+
+            document.getElementById('header-correct-count').textContent = correctCount;
+            document.getElementById('progress-text').textContent = `${answeredCount}/${totalQuestions} Selesai`;
+            
+            const percentage = Math.round((answeredCount / totalQuestions) * 100);
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+            // Cek jika semua 30 soal telah dijawab
+            const banner = document.getElementById('all-completed-banner');
+            if (answeredCount === totalQuestions) {
+                const finalScore = Math.round((correctCount / totalQuestions) * 100);
+                document.getElementById('final-summary-text').textContent = `Kamu menjawab benar ${correctCount} dari 30 soal (Nilai: ${finalScore}).`;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        // =========================================================================
+        // 5. MODAL RESET KUIS
+        // =========================================================================
+        function openResetModal() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').classList.add('hidden');
+        }
+
+        function confirmResetQuiz() {
+            userAnswers = {};
+            currentIndex = 0;
+            localStorage.removeItem(STORAGE_KEY);
+            closeResetModal();
+            renderQuestion();
+        }
+
+        // =========================================================================
+        // INISIALISASI SAAT HALAMAN DIMUAT
+        // =========================================================================
+        window.onload = function() {
+            loadStateFromStorage();
+            updateSoundUI();
+            renderQuestion();
+        };
+    </script>
+</body>
+</html>
